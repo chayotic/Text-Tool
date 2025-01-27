@@ -18,17 +18,23 @@ def load(path=None):  # LOAD THE FILES
                 print(colored("No text files found in the specified folder.", "yellow"))
                 return
             print(colored(f"\nText Files in Folder: {path}", "green", attrs=["bold"]))
+            print("0 - Exit")
             for i, f in enumerate(files, start=1):
-                print(colored(f"{i} - {os.path.basename(f)}", "cyan"))
+                print(colored(f"{i} - {os.path.basename(f)}"))
             print()
 
             while True:
-                choice = input(f"Please Select File (1 - {len(files)}): ")
+                choice = input(f"Please Select File (0 - {len(files)}): ")
                 if choice.isdigit():
                     choice = int(choice)
                     if 1 <= choice <= len(files):
                         file = open(files[choice - 1], "r")
+                    
                         print(colored(f"File Selected: {files[choice - 1]}", "green", attrs=["bold"]))
+                        break
+                    elif choice == 0:
+                        print(colored("Exiting","yellow"))
+                        break
                         return
                     else:
                         print(colored("Invalid Index!", "red"))
@@ -49,18 +55,16 @@ def load(path=None):  # LOAD THE FILES
     # Default: Load files from the current directory
     files = [os.path.join(os.getcwd(), f) for f in os.listdir(os.getcwd()) if f.endswith('.txt')]
     
-    if not files:
-        print(colored("No text files found in the current directory.", "yellow"))
-        return
+    
     
     print(colored("\nYour Files", "green", attrs=["bold"]))
-    print("1 - Load From Path")
+    print("0 - Exit\n1 - Load From Path")
     for i, f in enumerate(files, start=2):
         print(f"{i} - {os.path.basename(f)}")
     print()
 
     while True:
-        choice = input(f"Please Select File (1 - {len(files) + 1}): ")
+        choice = input(f"Please Select File (0 - {len(files) + 1}): ")
         if choice.isdigit():
             choice = int(choice)
             if choice == 1:  # Load from a user-specified path
@@ -222,4 +226,4 @@ def menu():                #MENU
                 delete()
         else:
             input_error()
-menu()
+menu() 
