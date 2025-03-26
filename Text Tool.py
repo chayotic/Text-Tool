@@ -1,16 +1,16 @@
+#v1.3
 import termcolor
 from termcolor import colored
 import os
 
 file = None
 
-def input_error():       #INPUT ERROR
-    print(colored("Invalid Input!","red"))
+def input_error():  # INPUT ERROR
+    print(colored("Invalid Input!", "red"))
 
 def load(path=None):  # LOAD THE FILES
     global file
 
-    # Check if a path is specified
     if path:
         if os.path.isdir(path):  # If the path is a directory
             files = [os.path.join(path, f) for f in os.listdir(path) if f.endswith('.txt')]
@@ -28,24 +28,20 @@ def load(path=None):  # LOAD THE FILES
                 if choice.isdigit():
                     choice = int(choice)
                     if 1 <= choice <= len(files):
-                        file = open(files[choice - 1], "r")
-                    
+                        file = open(files[choice - 1], "r+")
                         print(colored(f"File Selected: {files[choice - 1]}", "green", attrs=["bold"]))
                         break
                     elif choice == 0:
-                        print(colored("Exiting","yellow"))
+                        print(colored("Exiting", "yellow"))
                         break
-                        return
                     else:
                         print(colored("Invalid Index!", "red"))
                 else:
                     input_error()
-
         elif os.path.isfile(path) and path.endswith('.txt'):  # If the path is a file
             try:
-                file = open(path, "r")
+                file = open(path, "r+")
                 print(colored(f"File Loaded from Path: {path}", "green", attrs=["bold"]))
-                return
             except Exception as e:
                 print(colored(f"Error opening file: {e}", "red"))
         else:
@@ -54,9 +50,7 @@ def load(path=None):  # LOAD THE FILES
 
     # Default: Load files from the current directory
     files = [os.path.join(os.getcwd(), f) for f in os.listdir(os.getcwd()) if f.endswith('.txt')]
-    
-    
-    
+
     print(colored("\nYour Files", "green", attrs=["bold"]))
     print("0 - Exit\n1 - Load From Path")
     for i, f in enumerate(files, start=2):
@@ -73,7 +67,7 @@ def load(path=None):  # LOAD THE FILES
                 load(user_path)
                 break
             elif 2 <= choice <= len(files) + 1:  # Load file from current directory
-                file = open(files[choice - 2], "r")
+                file = open(files[choice - 2], "r+")
                 print(colored(f"File Selected: {files[choice - 2]}", "green", attrs=["bold"]))
                 break
             elif choice == 0:
@@ -83,39 +77,53 @@ def load(path=None):  # LOAD THE FILES
                 print(colored("Invalid Index!", "red"))
         else:
             input_error()
-       
-def replace():          #REPLACE WORDS
+
+def replace():  # REPLACE WORDS
     global file
-    if file == None:
+    if file is None:
         load()
-        if file != None:
-            replace()
+        return
     file_name = file.name
     file.seek(0)
     content = file.read()
-    print(colored("\nNOTE: This operation is case sensitive!","yellow"))
-    old=input("\nEnter Word To Be Replaced: ")
-    new=input("Enter New Word: ")
+    print(colored("\nNOTE: This operation is case sensitive!", "yellow"))
+    old = input("\nEnter Word To Be Replaced: ")
+    new = input("Enter New Word: ")
     updated_content = content.replace(old, new)
-    f = open(file_name, "w")
-    f.write(updated_content)
-    file = open(file_name,"r+")
-    print(colored("Replaced Sucessfully!","green"))
-    
-def appendtext():          #APPENDS TO A NEW LINE
+    with open(file_name, "w") as f:
+        f.write(updated_content)
+    print(colored("Replaced Successfully!", "green"))
+
+def appendtext():  # APPENDS TO A NEW LINE
     global file
-    if file == None:
+    if file is None:
         load()
-        if file != None:
+        if file is not None:
             appendtext()
-    file = open(file.name, "a")
-    new_content=input("Enter Content To Be Added To The End: ")
+    new_content = input("Enter Content To Be Added To The End: ")
     file.write("\n" + new_content)
-    print(colored("Written Successfully","green"))
-    file.close()
-    file = open(file.name,"r+")
+    file.flush()
+    print(colored("Written Successfully", "green"))
+
+def read():  # READ THE FILES
+    if file is None:
+        load()
+        if file is not None:
+            read()
+    else:
+        print(colored(f"\n{os.path.basename(file.name)} Content", "cyan", attrs=["bold"]))
+        file.seek(0)
+        print(file.read())
+
+def create():  # CREATE NEW FILE
+    global file
+    name = input("Enter File Name: ")
+    if not name.endswith(".txt"):
+        name += ".txt"
+    with open(name, "w") as f:
+        print(colored(f"Created File {name}", "yellow"))
+    file = open(name, "r+")
     
-                                              
 def edit():               #EDIT FILE
     if file == None:
         load()
@@ -142,61 +150,103 @@ def edit():               #EDIT FILE
             else:
                 input_error() 
 
-def read():               #READ THE FILES
-    if file == None:
-        load()
-        if file != None:
-            read()
-    else:
-        print(colored(f"\n{os.path.basename(file.name)} Content","cyan",attrs=["bold"]))
-        content = file.read()
-        print(content)
-
-def create():             #CREATE NEW FILE
+def clear():  # CLEAR FILE
     global file
-    name = input("Enter File Name: ")
-    if not name.endswith(".txt"):
-        name += ".txt"
-    f = open(name,"w")
-    print(colored(f"Created File {name}","yellow"))
-    f.close()
-    file = open(name, "r+")
-    
-def clear():              #CLEAR FILE
-    global file
-    if file == None:
+    if file is None:
         load()
-        if file != None:
+        if file is not None:
             clear()
     else:
-        confirmation = input(colored(f"Are you sure you want to clear {os.path.basename(file.name)}, This process is irreversible (yes/no): ","red"))
+        confirmation = input(colored(f"Are you sure you want to clear {os.path.basename(file.name)}? (yes/no): ", "red"))
         if confirmation.lower() == 'yes':
-            file_name = file.name
-            file.close()
-            file = open(file_name,"w")
-            file.close()
-            file = open(file_name,"r+")
-            print(colored("File cleared sucessfully","green"))
+            file.truncate(0)
+            print(colored("File cleared successfully", "green"))
         else:
-            print(colored("Cancelling!","yellow"))
-    
-def delete():             #DELETE FILE
+            print(colored("Cancelling!", "yellow"))
+
+def delete():  # DELETE FILE
     global file
-    if file == None:
+    if file is None:
         load()
-        if file != None:
+        if file is not None:
             delete()
     else:
-        confirmation = input(colored(f"Are you sure you want to delete {os.path.basename(file.name)}, This process is irreversible (yes/no): ","red"))
+        confirmation = input(colored(f"Are you sure you want to delete {os.path.basename(file.name)}? (yes/no): ", "red"))
         if confirmation.lower() == 'yes':
             file_name = file.name
             file.close()
             os.remove(file_name)
             file = None
-            print(colored("File deleted sucessfully","green"))
+            print(colored("File deleted successfully", "green"))
         else:
-            print(colored("Cancelling!","yellow"))            
-                            
+            print(colored("Cancelling!", "yellow"))
+
+def tools():  # TEXT TOOLS
+    global file
+    if file is None:
+        load()
+        if file is not None:
+            tools()
+    else:
+        while True:
+            print(colored("\nSelect Tool", "yellow", attrs=["bold"]))
+            print("0 - Exit\n1 - Capitalization\n2 - Decapitalisation\n3 - Word & Character Count")
+            choice = input("Enter Choice (0-3): ")
+            if choice == "0":
+                print(colored("Exiting", "yellow"))
+                break
+            elif choice == "1":  # Capitalization
+                file.seek(0)
+                content = file.read()
+                while True:
+                    print("\n0 - Exit\n1 - Capitalize Every Word\n2 - Capitalize Everything")
+                    choice = input("Enter Choice (0 - 2): ")
+                    if choice == "1":
+                        updated_content = content.title()
+                    elif choice == "2":
+                        updated_content = content.upper()
+                    elif choice == "0":
+                        print(colored("exiting"))
+                        break
+                    else:
+                        print(colored("Invalid input", "red"))
+                    file.seek(0)
+                    file.truncate()
+                    file.write(updated_content)
+                    file.flush()
+                    print(colored("Capitalization Applied!", "green"))
+             
+            elif choice=="2": #decapitalisation
+                file.seek(0)
+                content = file.read()
+                while True:
+                    print("\n0 - Exit\n1 - Decapitalise Every Word\n2 - Decapitalize Everything")
+                    choice = input("Enter Choice (0 - 2): ")
+                    if choice == "1":
+                        updated_content = ' '.join(word[:1].lower() + word[1:] for word in content.split())
+
+                    elif choice == "2":
+                        updated_content = content.lower()
+                    elif choice == "0":
+                        print(colored("exiting"))
+                        break
+                    else:
+                        print(colored("Invalid input", "red"))
+                    file.seek(0)
+                    file.truncate()
+                    file.write(updated_content)
+                    file.flush()
+                    print(colored("Capitalization Applied!", "green"))             
+                    
+            elif choice == "3":  # Word & Character Count
+                file.seek(0)
+                content = file.read()
+                words = len(content.split())
+                chars = len(content.strip("\n"))
+                print(colored(f"Words: {words}, Characters: {chars}", "cyan"))
+            else:
+                print(colored("Invalid input", "red"))
+
 def menu():                #MENU
     while True:
         print()
@@ -206,7 +256,8 @@ def menu():                #MENU
         print(colored("4 - Edit File",attrs=["bold"]))
         print(colored("5 - Clear File",attrs=["bold"]))
         print(colored("6 - Delete File",attrs=["bold"]))
-        choice=input("Enter Choice (0-5): ")
+        print(colored("7 - Tools",attrs=["bold"]))
+        choice=input("Enter Choice (0-7): ")
         if choice.isdigit():
             choice=int(choice)
             if choice == 0:
@@ -224,6 +275,9 @@ def menu():                #MENU
                 clear()
             elif choice == 6:
                 delete()
+            elif choice == 7:
+                tools()
         else:
             input_error()
-menu() 
+
+menu()
